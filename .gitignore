@@ -1,0 +1,17 @@
+# Variáveis de ambiente — NUNCA commitar
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Dados brutos — demasiado grandes para o repositório
+*.csv
+*.zip
+*.parquet
+
+# Logs
+*.log

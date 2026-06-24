@@ -1,0 +1,33 @@
+# ============================================================
+# docker-compose.yml — BiT App / Equipa 48
+# ============================================================
+# Uso:
+#   docker compose up -d       → sobe o PostgreSQL
+#   docker compose down        → para e remove o container
+#   docker compose down -v     → para, remove container e dados
+# ============================================================
+
+services:
+  db:
+    image: postgres:16
+    container_name: bitapp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DB_NAME}
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      # Schema aplicado automaticamente na primeira subida
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      # Dados persistidos entre reinicios
+      - bitapp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  bitapp_pgdata:
