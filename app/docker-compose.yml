@@ -20,7 +20,7 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       # Schema aplicado automaticamente na primeira subida
-      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./data/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       # Dados persistidos entre reinicios
       - bitapp_pgdata:/var/lib/postgresql/data
     healthcheck:
