@@ -1,17 +1,94 @@
-# Variáveis de ambiente — NUNCA commitar
-.env
+# ============================================================
+# .gitignore — BiT App / Equipa 48
+# Raiz do repositório (bit/)
+# ============================================================
 
-# Python
+# --- Variáveis de ambiente e segredos ---
+.env
+.env.local
+*.env
+!.env.example
+**/application-secrets.yml
+**/*.pem
+**/*.key
+
+# --- Dados brutos e datasets ---
+# O dataset-visent tem o seu próprio repositório — nunca commitar
+# CSVs, ZIPs ou parquet dentro do projecto da equipa
+*.csv
+*.zip
+*.parquet
+*.xlsx
+dataset-visent/
+app/data/referencias/
+app/data/tensores/
+
+# ============================================================
+# BACKEND — Spring Boot / Java (app/backend)
+# ============================================================
+app/backend/target/
+app/backend/build/
+app/backend/.gradle/
+app/backend/.mvn/
+app/backend/HELP.md
+*.class
+*.jar
+*.war
+!**/gradle-wrapper.jar
+
+# ============================================================
+# FRONTEND — React / Node (app/frontend)
+# ============================================================
+app/frontend/node_modules/
+app/frontend/dist/
+app/frontend/build/
+app/frontend/.vite/
+app/frontend/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================================================
+# DATA / PYTHON (app/data)
+# ============================================================
+app/data/__pycache__/
+app/data/*.pyc
+app/data/.venv/
+app/data/venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
 venv/
+.pytest_cache/
 
-# Dados brutos — demasiado grandes para o repositório
-*.csv
-*.zip
-*.parquet
+# ============================================================
+# DOCKER
+# ============================================================
+docker-compose.override.yml
+**/pgdata/
 
-# Logs
+# ============================================================
+# LOGS
+# ============================================================
 *.log
+logs/
+
+# ============================================================
+# IDE / EDITORES
+# ============================================================
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# OUTROS
+# ============================================================
+*.bak
+*.tmp
+.cache/
