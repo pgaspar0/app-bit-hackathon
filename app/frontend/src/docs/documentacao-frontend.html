@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>App BiT — Documentação Frontend | Paufer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1f2937;
+      background: #fff;
+      line-height: 1.7;
+      padding: 40px 48px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 28px; margin-bottom: 4px; color: #111827; }
+    h2 { font-size: 20px; margin-top: 36px; margin-bottom: 12px; color: #111827; border-bottom: 2px solid #00B4D8; padding-bottom: 6px; }
+    h3 { font-size: 16px; margin-top: 24px; margin-bottom: 8px; color: #1f2937; }
+    h4 { font-size: 14px; margin-top: 16px; margin-bottom: 6px; color: #374151; }
+    p { margin-bottom: 10px; font-size: 13.5px; }
+    ul, ol { margin-bottom: 12px; padding-left: 24px; }
+    li { margin-bottom: 4px; font-size: 13.5px; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; font-family: 'Cascadia Code', 'Fira Code', monospace; }
+    pre { background: #f3f4f6; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5; margin-bottom: 14px; border: 1px solid #e5e7eb; }
+    pre code { background: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
+    th { background: #f9fafb; font-weight: 600; }
+    .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .meta { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 30px 0; }
+    .toc { background: #f9fafb; padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e5e7eb; }
+    .toc h3 { margin-top: 0; }
+    .toc ul { margin-bottom: 0; }
+    .toc a { color: #2563eb; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .box { background: #f9fafb; border-left: 4px solid #00B4D8; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 14px; }
+    .box-warn { border-left-color: #f59e0b; background: #fffbeb; }
+    .file-path { font-family: monospace; font-size: 12px; color: #6b7280; }
+    .section-done::before { content: "✓ "; color: #16a34a; font-weight: bold; }
+    .section-pending::before { content: "○ "; color: #f59e0b; font-weight: bold; }
+
+    @media print {
+      body { padding: 20px; font-size: 11px; }
+      h1 { font-size: 22px; }
+      h2 { font-size: 16px; margin-top: 24px; }
+      h3 { font-size: 13px; }
+      p, li { font-size: 11px; }
+      pre { font-size: 9.5px; padding: 10px; }
+      table { font-size: 10px; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>App BiT — Painel de Inclusão Digital</h1>
+<p class="meta">
+  <strong>Autor:</strong> Paufer — Frontend Principal<br/>
+  <strong>Equipa:</strong> 48 · Hackathon BiT B2G<br/>
+  <strong>Data:</strong> Junho 2026<br/>
+  <strong>Estado:</strong> Semana 1 — Fundação (MVP mockado)
+</p>
+
+<div class="toc no-print">
+  <h3>Índice</h3>
+  <ul>
+    <li><a href="#resumo">1. Resumo Executivo</a></li>
+    <li><a href="#stack">2. Stack Tecnológico</a></li>
+    <li><a href="#estrutura">3. Estrutura do Projecto</a></li>
+    <li><a href="#componentes">4. Componentes React</a></li>
+    <li><a href="#contratos">5. Contratos de API (Mockados)</a></li>
+    <li><a href="#i18n">6. Internacionalização (PT/ES/EN)</a></li>
+    <li><a href="#responsivo">7. Estratégia Responsiva</a></li>
+    <li><a href="#estilo">8. Guia de Estilo</a></li>
+    <li><a href="#fluxo">9. Fluxo do Utilizador</a></li>
+    <li><a href="#estado">10. Estado Actual vs Próximos Passos</a></li>
+    <li><a href="#executar">11. Como Executar</a></li>
+    <li><a href="#notas">12. Notas Técnicas</a></li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="resumo">1. Resumo Executivo</h2>
+
+<p>
+  O <strong>App BiT</strong> é uma plataforma B2G (Business to Government) de apoio à decisão para gestores públicos.
+  Consolida dados do dataset <strong>Vísent CDRView</strong> (concentração de pessoas e cobertura de rede por região)
+  com fontes públicas, permitindo consultas em linguagem natural sobre 5 serviços críticos:
+</p>
+<ul>
+  <li><strong>Formações</strong> — Programas de formação tech por região</li>
+  <li><strong>Empregabilidade</strong> — Taxa de emprego formal vs concentração</li>
+  <li><strong>Experiências Estruturantes</strong> — Iniciativas sociais e culturais</li>
+  <li><strong>Mentorias</strong> — Programas de mentoria pública</li>
+  <li><strong>Saúde Mental</strong> — Indicadores de saúde mental vs conectividade</li>
+</ul>
+<p>
+  O frontend está construído em <strong>React + Tailwind CSS</strong> com mapa interactivo <strong>Leaflet</strong>.
+  Nesta fase (Semana 1), todos os dados são mockados para demonstrar o fluxo completo.
+</p>
+
+<!-- ============================================================ -->
+<h2 id="stack">2. Stack Tecnológico</h2>
+
+<table>
+  <tr><th>Camada</th><th>Tecnologia</th><th>Versão</th><th>Propósito</th></tr>
+  <tr><td>Framework UI</td><td>React</td><td>18.x</td><td>Componentes e estado</td></tr>
+  <tr><td>Estilização</td><td>Tailwind CSS</td><td>3.x</td><td>Utilitários responsivos</td></tr>
+  <tr><td>Mapa</td><td>Leaflet + react-leaflet</td><td>1.9 / 4.x</td><td>Mapa interactivo OpenStreetMap</td></tr>
+  <tr><td>Build (futuro)</td><td>Vite</td><td>5.x</td><td>Dev server e bundling</td></tr>
+  <tr><td>Teste rápido</td><td>CDN (unpkg)</td><td>—</td><td>index.html standalone via browser</td></tr>
+</table>
+
+<div class="box">
+  <strong>Nota:</strong> O stack foi escolhido por simplicidade e rapidez de desenvolvimento.
+  React + Tailwind é a combinação mais produtiva para um MVP B2G.
+  O Leaflet foi escolhido por ser gratuito, sem necessidade de API key.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="estrutura">3. Estrutura do Projecto</h2>
+
+<pre>app-bit/
+├── index.html                        ← Versão standalone (CDN) para testes imediatos
+├── package.json                      ← Dependências npm (react, react-dom)
+├── node_modules/
+└── src/
+    └── components/
+        ├── DashboardLayout.jsx       ← Componente principal (casca)
+        ├── SidebarConsulta.jsx       ← Barra de consulta + resultados mockados
+        └── MapaInterativo.jsx        ← Mapa Leaflet com círculos interactivos</pre>
+
+<div class="box box-warn">
+  <strong>Atenção:</strong> O projecto ainda não tem Vite configurado (npm registry offline).
+  O ficheiro <code>index.html</code> carrega React + Leaflet + Tailwind via CDN e funciona
+  abrindo diretamente no browser. Para build futura, é necessário instalar as dependências
+  e usar <code>npm run dev</code>.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="componentes">4. Componentes React</h2>
+
+<!-- ─── DashboardLayout ─── -->
+<h3>4.1. DashboardLayout <span class="file-path">(src/components/DashboardLayout.jsx)</span></h3>
+<p><strong>Função:</strong> Componente casca que orquestra todo o layout.</p>
+
+<h4>Estado gerido:</h4>
+<table>
+  <tr><th>Estado</th><th>Tipo</th><th>Padrão</th><th>Descrição</th></tr>
+  <tr><td><code>servicoAtivo</code></td><td>string</td><td><code>'formacoes'</code></td><td>Serviço selecionado nas tabs</td></tr>
+  <tr><td><code>regiaoAtiva</code></td><td>string</td><td><code>'todas'</code></td><td>Filtro de região</td></tr>
+  <tr><td><code>idioma</code></td><td>string</td><td><code>'pt'</code></td><td>Idioma atual (pt | es | en)</td></tr>
+</table>
+
+<h4>Estrutura visual:</h4>
+<pre>┌──────────────────────────────────────────────────────────┐
+│ Header: [B] App BiT — Painel de Inclusão Digital  [PT|ES|EN] [Badge CDRView] │
+├──────────────────────────────────────────────────────────┤
+│ Tabs: Formações | Empregabilidade | Exp. Estruturantes | Mentorias | Saúde Mental │
+├──────────────────────┬───────────────────────────────────┤
+│   SidebarConsulta    │         MapaInterativo             │
+│   (40% desktop)      │         (60% desktop)              │
+│   scroll interno     │         altura total               │
+└──────────────────────┴───────────────────────────────────┘</pre>
+
+<h4>Props passadas aos filhos:</h4>
+<table>
+  <tr><th>Filho</th><th>Props</th></tr>
+  <tr><td>SidebarConsulta</td><td><code>servicoAtivo, regiaoAtiva, onRegiaoChange, corBase, idioma</code></td></tr>
+  <tr><td>MapaInterativo</td><td><code>servicoAtivo, idioma</code></td></tr>
+</table>
+
+<!-- ─── SidebarConsulta ─── -->
+<h3>4.2. SidebarConsulta <span class="file-path">(src/components/SidebarConsulta.jsx)</span></h3>
+<p><strong>Função:</strong> Coluna lateral de consulta. Permite ao gestor selecionar região, fazer perguntas em linguagem natural e visualizar respostas mockadas.</p>
+
+<h4>Estados internos:</h4>
+<table>
+  <tr><th>Estado</th><th>Função</th></tr>
+  <tr><td><code>query</code></td><td>Texto digitado no input</td></tr>
+  <tr><td><code>resultado</code></td><td>Resposta mockada após submissão (null = estado inicial)</td></tr>
+  <tr><td><code>carregando</code></td><td>Simula loading de 1.2s antes de mostrar resposta</td></tr>
+</table>
+
+<h4>Mock data por serviço:</h4>
+<p>Cada um dos 5 serviços tem:</p>
+<ul>
+  <li><strong>3 sugestões</strong> de perguntas (traduzidas em PT/ES/EN)</li>
+  <li><strong>1 resposta_ia</strong> com análise em linguagem natural</li>
+  <li><strong>2 dados</strong> no formato <code>{regiao, valor, fonte}</code></li>
+  <li><strong>Fontes</strong> associadas</li>
+</ul>
+<p>Exemplo (<code>formacoes</code>):</p>
+<pre>{
+  resposta_ia: "A Zona Urbana Norte apresenta 85% de concentração juvenil...",
+  dados: [
+    { regiao: "Zona Urbana Norte", valor: 28, fonte: "Vísent CDRView" },
+    { regiao: "Distrito Industrial Sul", valor: 72, fonte: "Vísent CDRView" }
+  ],
+  fontes: ["Vísent CDRView", "Ministério da Educação"]
+}</pre>
+
+<h4>Estados visuais:</h4>
+<ul>
+  <li><strong>Aguardando consulta:</strong> dashed border com "?" e texto explicativo</li>
+  <li><strong>Loading:</strong> spinner animado com a cor do serviço ativo</li>
+  <li><strong>Resultado:</strong> bloco de resposta + grid de cards + badges de fontes + botão "Nova Consulta"</li>
+</ul>
+
+<!-- ─── MapaInterativo ─── -->
+<h3>4.3. MapaInterativo <span class="file-path">(src/components/MapaInterativo.jsx)</span></h3>
+<p><strong>Função:</strong> Mapa OpenStreetMap com círculos sobrepostos representando as regiões analisadas.</p>
+
+<h4>Dados mockados (GET /mapa):</h4>
+<table>
+  <tr><th>Região</th><th>Lat</th><th>Lng</th><th>Cobertura Rede</th><th>Concentração</th><th>Indicadores</th></tr>
+  <tr><td>Zona Urbana Norte</td><td>-15.195</td><td>12.150</td><td>30%</td><td>85%</td><td>emprego, formacao</td></tr>
+  <tr><td>Distrito Industrial Sul</td><td>-15.210</td><td>12.165</td><td>75%</td><td>40%</td><td>conectividade</td></tr>
+</table>
+
+<h4>Lógica de cores:</h4>
+<table>
+  <tr><th>Condição</th><th>Cor</th><th>Significado</th></tr>
+  <tr><td>Cobertura &lt; 40% e concentração &gt; 70%<br/>OU indicador do serviço em alerta</td><td><span class="badge-red">#E63946</span></td><td>Alerta — Serviço crítico</td></tr>
+  <tr><td>Cobertura &lt; 60%</td><td><span style="display:inline-block;background:#F4A261;padding:2px 10px;border-radius:999px;font-size:11px;color:#fff;">#F4A261</span></td><td>Cobertura Parcial</td></tr>
+  <tr><td>Cobertura &ge; 60%</td><td><span style="display:inline-block;background:#06D6A0;padding:2px 10px;border-radius:999px;font-size:11px;color:#fff;">#06D6A0</span></td><td>Infraestrutura Sólida</td></tr>
+</table>
+
+<h4>Interações:</h4>
+<ul>
+  <li><strong>Popup ao clicar no círculo</strong> — mostra nome, cobertura, concentração, valor do indicador e 3 tags de diagnóstico</li>
+  <li><strong>Tooltip fixo (mobile)</strong> — colado ao fundo do ecrã em mobile, centrado em desktop</li>
+  <li><strong>Legenda flutuante</strong> — canto inferior direito com as 3 cores e significados</li>
+  <li><strong>Cores dinâmicas</strong> — mudam conforme o serviço selecionado nas tabs</li>
+</ul>
+
+<p><strong>Dependências:</strong> <code>react-leaflet</code> e <code>leaflet</code> (npm). No index.html é usado Leaflet via CDN.</p>
+
+<!-- ============================================================ -->
+<h2 id="contratos">5. Contratos de API (Mockados)</h2>
+
+<h3>POST /dados</h3>
+<pre>Request:
+{
+  "consulta": "Onde faltam programas de formação para jovens de baixa renda?",
+  "filtros": { "regiao": "Luanda", "indicador": "formacao" },
+  "idioma": "pt"
+}
+
+Response:
+{
+  "resposta_ia": "A Zona Urbana Norte apresenta 85% de concentração juvenil...",
+  "dados": [
+    { "regiao": "Zona Urbana Norte", "valor": 28, "fonte": "Vísent CDRView" },
+    { "regiao": "Distrito Industrial Sul", "valor": 72, "fonte": "Vísent CDRView" }
+  ],
+  "fontes": ["Vísent CDRView", "Ministério da Educação"]
+}</pre>
+
+<h3>GET /mapa</h3>
+<pre>Response:
+{
+  "regioes": [
+    {
+      "regiao": "Zona Urbana Norte",
+      "lat": -15.195,
+      "lng": 12.150,
+      "concentracao": 85,
+      "cobertura_rede": 30,
+      "indicadores": ["emprego", "formacao"]
+    },
+    {
+      "regiao": "Distrito Industrial Sul",
+      "lat": -15.210,
+      "lng": 12.165,
+      "concentracao": 40,
+      "cobertura_rede": 75,
+      "indicadores": ["conectividade"]
+    }
+  ]
+}</pre>
+
+<div class="box">
+  <strong>Importante para o backend:</strong> O frontend espera exatamente este formato.
+  Qualquer mudança no contrato quebra a exibição dos dados.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="i18n">6. Internacionalização (PT/ES/EN)</h2>
+
+<p>O sistema suporta 3 idiomas: <strong>Português</strong>, <strong>Espanhol</strong> e <strong>Inglês</strong>.</p>
+
+<p><strong>Mecanismo:</strong></p>
+<ul>
+  <li>Estado <code>idioma</code> no <code>DashboardLayout</code> (valor padrão: <code>'pt'</code>)</li>
+  <li>Passado como prop para <code>SidebarConsulta</code> e <code>MapaInterativo</code></li>
+  <li>Função <code>t(obj, idioma)</code> que retorna a string no idioma correto:
+    <pre>function t(obj, idioma) {
+  return typeof obj === 'string' ? obj : obj[idioma];
+}</pre>
+  </li>
+  <li>Selector de idioma no header (PT | ES | EN) — toggle visual com bg branco no ativo</li>
+</ul>
+
+<p><strong>Textos traduzidos:</strong></p>
+<ul>
+  <li>Nomes dos 5 serviços</li>
+  <li>Sugestões de perguntas (3 por serviço × 3 idiomas = 45 frases)</li>
+  <li>Respostas da IA (5 serviços × 3 idiomas = 15 blocos de texto)</li>
+  <li>Nomes das regiões</li>
+  <li>UI genérica: placeholders, botões, legendas, tooltips, labels</li>
+  <li>Legenda do mapa e status de alerta</li>
+  <li>Badge do dataset</li>
+  <li>Nome do dashboard</li>
+</ul>
+
+<div class="box box-warn">
+  <strong>Como adicionar um novo idioma:</strong> Acrescentar a chave nos objetos de tradução
+  (ex: <code>fr: '...'</code>), adicionar o botão no seletor e o caso no <code>idioma ===</code>.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="responsivo">7. Estratégia Responsiva</h2>
+
+<p>O layout adapta-se a 3 breakpoints usando classes utilitárias do Tailwind:</p>
+
+<table>
+  <tr><th>Breakpoint</th><th>Largura</th><th>Comportamento</th></tr>
+  <tr><td>Mobile</td><td>&lt; 640px</td><td>Stack vertical: header empilhado, sidebar em cima, mapa em baixo. Input + botão empilhados. Badge reduzido para "CDRView". Scroll horizontal nas tabs.</td></tr>
+  <tr><td>Tablet</td><td>640px — 1023px</td><td>Header horizontal. Sidebar + mapa ainda empilhados. Cards em grid de 2 colunas.</td></tr>
+  <tr><td>Desktop</td><td>&ge; 1024px</td><td>Split view: sidebar 40% à esquerda com scroll, mapa 60% à direita ocupando <code>calc(100vh - 96px)</code>. Tabs sem scroll.</td></tr>
+</table>
+
+<p><strong>Detalhes de implementação:</strong></p>
+<ul>
+  <li>Header: <code>flex-col sm:flex-row</code> — empilha em mobile</li>
+  <li>Main: <code>flex-col lg:flex-row lg:h-[calc(100vh-96px)]</code> — split em desktop com altura total</li>
+  <li>Sidebar: <code>lg:flex lg:flex-col lg:h-full lg:overflow-hidden</code> + <code>lg:flex-1 lg:overflow-y-auto</code> no conteúdo</li>
+  <li>Mapa: <code>lg:flex lg:flex-col lg:h-full</code> + <code>flex-1</code> no container</li>
+  <li>Tabs: <code>overflow-x-auto</code> + <code>w-max</code> para scroll horizontal em mobile</li>
+  <li>Tooltip do mapa: <code>fixed</code> em mobile (colado ao fundo), <code>absolute</code> em desktop (centrado)</li>
+  <li>Botões: <code>min-h-[44px]</code> para touch targets acessíveis</li>
+  <li>Textos: <code>text-xs sm:text-sm</code>, <code>text-2xl sm:text-3xl</code>, etc.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="estilo">8. Guia de Estilo</h2>
+
+<h3>Cores institucionais:</h3>
+<table>
+  <tr><th>Token</th><th>Hex</th><th>Uso</th></tr>
+  <tr><td>Fundo app</td><td>#F8F9FA</td><td>Background principal (cinza ultra-claro)</td></tr>
+  <tr><td>Azul tecnológico</td><td>#00B4D8</td><td>Botão "Consultar IA", borda do bloco resposta, indicador Formações</td></tr>
+  <tr><td>Verde dataset</td><td>#16a34a (green-700)</td><td>Badge "Dataset Vísent CDRView Ativo"</td></tr>
+  <tr><td>Vermelho alerta</td><td>#E63946</td><td>Círculo de alerta no mapa, barra de progresso baixa</td></tr>
+  <tr><td>Laranja parcial</td><td>#F4A261</td><td>Cobertura parcial no mapa</td></tr>
+  <tr><td>Verde sólido</td><td>#06D6A0</td><td>Infraestrutura sólida no mapa</td></tr>
+</table>
+
+<h3>Cores dos 5 serviços:</h3>
+<table>
+  <tr><th>Serviço</th><th>Cor</th></tr>
+  <tr><td>Formações</td><td>#00B4D8</td></tr>
+  <tr><td>Empregabilidade</td><td>#2A9D8F</td></tr>
+  <tr><td>Exp. Estruturantes</td><td>#8B5CF6</td></tr>
+  <tr><td>Mentorias</td><td>#F4A261</td></tr>
+  <tr><td>Saúde Mental</td><td>#E76F51</td></tr>
+</table>
+
+<h3>Tipografia:</h3>
+<ul>
+  <li>Fonte: system-ui (padrão do sistema)</li>
+  <li>Pesos: <code>font-normal</code> (400), <code>font-semibold</code> (600), <code>font-bold</code> (700)</li>
+  <li>Tamanhos: <code>text-xs</code> (12px) a <code>text-xl</code> (20px) com variações responsivas</li>
+  <li>Cor do texto escuro: <code>text-gray-800</code> (#1f2937)</li>
+  <li>Cor do texto claro: <code>text-gray-400</code> / <code>text-gray-500</code></li>
+</ul>
+
+<h3>Sombras e cantos:</h3>
+<ul>
+  <li>Cards: <code>shadow-sm</code> + <code>rounded-xl</code> (12px)</li>
+  <li>Input: <code>shadow-sm</code> + <code>rounded-2xl</code> (16px)</li>
+  <li>Botões: <code>rounded-2xl</code> (16px) ou <code>rounded-xl</code> (12px)</li>
+  <li>Badges: <code>rounded-full</code></li>
+  <li>Header: <code>shadow-sm</code></li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="fluxo">9. Fluxo do Utilizador</h2>
+
+<ol>
+  <li><strong>Abrir a app</strong> — vê o header, as tabs dos 5 serviços e o split sidebar + mapa</li>
+  <li><strong>Selecionar serviço</strong> — clica numa tab (ex: Formações). O mapa atualiza cores e legendas</li>
+  <li><strong>Escolher região</strong> — dropdown no topo da sidebar (opcional: "Todas as Regiões")</li>
+  <li><strong>Fazer pergunta</strong> — clica numa sugestão OU digita no input</li>
+  <li><strong>Clicar "Consultar IA"</strong> — vê spinner de 1.2s, depois aparece:
+    <ul>
+      <li>Bloco com a resposta em linguagem natural</li>
+      <li>2 cards com valores e barras de progresso</li>
+      <li>Badges com as fontes dos dados</li>
+    </ul>
+  </li>
+  <li><strong>Explorar mapa</strong> — clica nos círculos para ver popups com indicadores</li>
+  <li><strong>Mudar idioma</strong> — clica em PT | ES | EN no header. Todo o conteúdo traduz</li>
+  <li><strong>"Nova Consulta"</strong> — limpa o resultado e volta ao estado inicial</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="estado">10. Estado Actual vs Próximos Passos</h2>
+
+<h3>✓ O que está feito (Semana 1 — Fundação mockada):</h3>
+<ul>
+  <li class="section-done">Layout responsivo desktop/mobile com split 40/60</li>
+  <li class="section-done">Header + tabs dos 5 serviços + seletor de idioma</li>
+  <li class="section-done">Sidebar com input, sugestões contextuais, loading, resultado mockado</li>
+  <li class="section-done">Mapa Leaflet com 2 regiões, círculos coloridos, popups, legenda</li>
+  <li class="section-done">Cores dinâmicas no mapa conforme o serviço selecionado</li>
+  <li class="section-done">Tooltip fixo em mobile, popup em desktop</li>
+  <li class="section-done">Internacionalização PT/ES/EN completa</li>
+  <li class="section-done">Mock data por serviço (5 × respostas IA diferentes)</li>
+  <li class="section-done">Contratos API mockados (POST /dados, GET /mapa)</li>
+  <li class="section-done">Documentação técnica (este documento)</li>
+</ul>
+
+<h3>○ Próximos passos recomendados (Semana 2 — Integração real):</h3>
+<ul>
+  <li class="section-pending">Configurar Vite + npm: <code>npm create vite@latest</code> + <code>npm install react-leaflet leaflet</code></li>
+  <li class="section-pending">Ligar POST /dados ao backend real (substituir mock timeout por fetch)</li>
+  <li class="section-pending">Ligar GET /mapa ao backend real (substituir mock data por dados reais do PostgreSQL)</li>
+  <li class="section-pending">Adicionar import <code>import 'leaflet/dist/leaflet.css'</code> no entry point do Vite</li>
+  <li class="section-pending">Adicionar mais regiões conforme o dataset Vísent CDRView</li>
+  <li class="section-pending">Validar contratos com o backend (Victor) e serviço Python (Hércules)</li>
+</ul>
+
+<h3>○ Melhorias futuras (Semana 3 — Acabamento):</h3>
+<ul>
+  <li class="section-pending">Exportação PDF dos resultados</li>
+  <li class="section-pending">Alertas por limiar (ex: cobertura &lt; 20% destaca automaticamente)</li>
+  <li class="section-pending">Comparativo entre regiões</li>
+  <li class="section-pending">Filtros por período</li>
+  <li class="section-pending">Suporte multilíngue para mais idiomas se necessário</li>
+  <li class="section-pending">PWA: manifest.json + service worker para instalação</li>
+  <li class="section-pending">Testes unitários (Jest + React Testing Library)</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="executar">11. Como Executar</h2>
+
+<h3>Opção 1 — Abrir index.html (imediato, sem build):</h3>
+<pre>Navegar até: C:\Users\[user]\Desktop\app-bit\
+Abrir: index.html (duplo clique)
+Requisito: Internet (carrega React + Leaflet + Tailwind via CDN)</pre>
+
+<h3>Opção 2 — Vite + npm (quando o registry estiver acessível):</h3>
+<pre>cd C:\Users\[user]\Desktop\app-bit\
+npm install
+npm run dev
+# Abre em http://localhost:5173</pre>
+
+<h3>Opção 3 — Python HTTP server (alternativa local):</h3>
+<pre>cd C:\Users\[user]\Desktop\app-bit\
+python -m http.server 8080
+# Abre em http://localhost:8080</pre>
+
+<!-- ============================================================ -->
+<h2 id="notas">12. Notas Técnicas</h2>
+
+<ul>
+  <li><strong>Leaflet CSS:</strong> No <code>index.html</code> é carregado via <code>&lt;link&gt;</code> do CDN. No Vite será via <code>import 'leaflet/dist/leaflet.css'</code> no entry point.</li>
+  <li><strong>react-leaflet vs Leaflet puro:</strong> O <code>MapaInterativo.jsx</code> (JSX) usa <code>react-leaflet</code> (declarativo). O <code>index.html</code> (CDN) usa Leaflet vanilla com <code>useEffect</code> + <code>useRef</code> (imperativo). Ambos produzem o mesmo resultado.</li>
+  <li><strong>Mock vs Real:</strong> Toda a lógica de dados está nos ficheiros <code>SidebarConsulta.jsx</code> e <code>MapaInterativo.jsx</code>. Para ligar ao backend, basta substituir os <code>setTimeout</code> por chamadas <code>fetch</code> aos endpoints.</li>
+  <li><strong>Coordenadas:</strong> As regiões usam coordenadas reais de Luanda, Angola (dataset Vísent CDRView).</li>
+  <li><strong>Semântica:</strong> O código usa <code>&lt;header&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code> para acessibilidade.</li>
+  <li><strong>Sem emojis:</strong> Todo o UI é profissional sem ícones gráficos (apenas texto + SVG).</li>
+  <li><strong>Ficheiros na raiz:</strong> <code>index.html</code> é standalone. Os componentes React estão em <code>src/components/</code>.</li>
+</ul>
+
+<hr/>
+
+<div class="box">
+  <p><strong>Contacto:</strong> Paufer — Frontend Principal, Equipa 48</p>
+  <p><strong>Repositório:</strong> github.com/wongola-bit/appbit (dataset original: Vísent CDRView)</p>
+  <p style="margin-bottom:0"><strong>Documento gerado em:</strong> Junho 2026</p>
+</div>
+
+<p style="text-align:center;color:#9ca3af;margin-top:40px;font-size:12px">
+  App BiT — Hackathon B2G · Todos os direitos reservados à equipa 48
+</p>
+
+</body>
+</html>
