@@ -1,6 +1,6 @@
 com/bitapp/backend/entity/SubscriberDemographic.class
-com/bitapp/backend/entity/Indicator.class
 com/bitapp/backend/controller/RegiaoController.class
+com/bitapp/backend/entity/Indicator.class
 com/bitapp/backend/repository/ObservationRepository.class
 com/bitapp/backend/controller/DadosController.class
 com/bitapp/backend/controller/IngestaoController.class
@@ -13,11 +13,11 @@ com/bitapp/backend/service/MapaService.class
 com/bitapp/backend/config/WebConfig.class
 com/bitapp/backend/dto/RegiaoMapaDTO.class
 com/bitapp/backend/entity/CoveragePoint.class
-com/bitapp/backend/entity/Program.class
-com/bitapp/backend/dto/MapaResponseDTO.class
 com/bitapp/backend/dto/DadosEstatisticasDTO.class
-com/bitapp/backend/entity/Region.class
+com/bitapp/backend/dto/MapaResponseDTO.class
+com/bitapp/backend/entity/Program.class
 com/bitapp/backend/dto/ErrorResponseDTO.class
+com/bitapp/backend/entity/Region.class
 com/bitapp/backend/BitBackendApplication.class
 com/bitapp/backend/repository/SubscriberDemographicRepository.class
 com/bitapp/backend/entity/Observation.class
@@ -29,8 +29,8 @@ com/bitapp/backend/exception/GlobalExceptionHandler.class
 com/bitapp/backend/repository/SourceRepository.class
 com/bitapp/backend/dto/DadoItemDTO.class
 com/bitapp/backend/service/QueryInterpreterRouter.class
-com/bitapp/backend/service/IndicadorService.class
 com/bitapp/backend/service/AiServiceQueryInterpreter.class
+com/bitapp/backend/service/IndicadorService.class
 com/bitapp/backend/entity/OdFlow.class
 com/bitapp/backend/dto/FiltrosDTO.class
 com/bitapp/backend/dto/AiInterpretarRequestDTO.class
@@ -45,6 +45,6 @@ com/bitapp/backend/repository/QueryLogRepository.class
 com/bitapp/backend/repository/IndicatorRepository.class
 com/bitapp/backend/dto/AiInterpretarResponseDTO.class
 com/bitapp/backend/dto/IndicadorDTO.class
-com/bitapp/backend/repository/ObservationRepository$RegionValueProjection.class
 com/bitapp/backend/controller/MapaController.class
+com/bitapp/backend/repository/ObservationRepository$RegionValueProjection.class
 com/bitapp/backend/entity/Source.class
