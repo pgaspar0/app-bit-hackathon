@@ -203,9 +203,14 @@ def get_evolution_indicator(filtro, indicador) -> dict:
         }
     return {"message": "Nenhuma região encontrada com o indicador solicitado."}
 
+class Dado(BaseModel):
+    regiao: str
+    valor: str | None = None
+    fonte: str | None = None
+
 class ResponseModel(BaseModel):
     resposta_ia: str
-    dados: list[str] = Field(default_factory=list)
+    dados: list[Dado] = Field(default_factory=list)
     fontes: list[str] = Field(default_factory=list)
 
 with open('AgentInst.txt', 'r', encoding='utf-8') as file:
@@ -231,8 +236,8 @@ async def receive_webhook(request: Request):
             if isinstance(output, ResponseModel):
                 return output.model_dump()
             if isinstance(output, dict):
-                return ResponseModel(**output).model_dump()
-            return ResponseModel(resposta_ia=str(output)).model_dump()
+                return output
+            return output.get("resposta_ia", "Nenhuma resposta gerada pelo agente.")
     except Exception as exc:
         log.exception("Falha ao executar agente pesquisador.")
         raise HTTPException(status_code=502, detail=f"Falha no serviço de IA: {exc}") from exc
