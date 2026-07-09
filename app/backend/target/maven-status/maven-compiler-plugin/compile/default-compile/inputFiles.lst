@@ -9,6 +9,7 @@
 /home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/AiInterpretarRequestDTO.java
 /home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/AiInterpretarResponseDTO.java
 /home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/DadoItemDTO.java
+/home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/DadosEstatisticasDTO.java
 /home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/DadosRequestDTO.java
 /home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/DadosResponseDTO.java
 /home/escola42/Projects/bit/app/backend/src/main/java/com/bitapp/backend/dto/ErrorResponseDTO.java

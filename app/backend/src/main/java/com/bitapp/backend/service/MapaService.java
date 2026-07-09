@@ -10,6 +10,7 @@ import com.bitapp.backend.repository.RegionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,7 +44,7 @@ public class MapaService {
         this.observationRepository = observationRepository;
     }
 
-    public MapaResponseDTO gerarMapa() {
+    public MapaResponseDTO gerarMapa(String servico, String indicador) {
         List<Region> regioes = regionRepository.findAll();
 
         Map<Integer, BigDecimal> concentracaoPorRegiao = mapaDeValores(
@@ -51,6 +52,8 @@ public class MapaService {
 
         Map<Integer, BigDecimal> coberturaPorRegiao = mapaDeValores(
                 observationRepository.findLatestValuePerRegion(INDICADOR_COBERTURA, PERIODO_SEM_VARIACAO));
+
+        Map<Integer, RegionValueProjection> leituraAtiva = leituraAtiva(servico, indicador);
 
         Map<Integer, List<String>> indicadoresPorRegiao = observationRepository
                 .findDistinctIndicatorsByRegion()
@@ -60,17 +63,59 @@ public class MapaService {
                         Collectors.mapping(RegionIndicatorProjection::getIndicatorName, Collectors.toList())));
 
         List<RegiaoMapaDTO> regioesDTO = regioes.stream()
-                .map(r -> new RegiaoMapaDTO(
+                .map(r -> {
+                    RegionValueProjection valorAtivo = leituraAtiva.get(r.getId());
+                    return new RegiaoMapaDTO(
                         r.getClusterCode(),
                         r.getLat(),
                         r.getLng(),
                         concentracaoPorRegiao.getOrDefault(r.getId(), BigDecimal.ZERO),
                         coberturaPorRegiao.getOrDefault(r.getId(), BigDecimal.ZERO),
+                        valorAtivo != null ? valorAtivo.getObsValue() : null,
+                        valorAtivo != null ? valorAtivo.getIndicatorName() : null,
                         r.getLat() == null || r.getLng() == null,
-                        indicadoresPorRegiao.getOrDefault(r.getId(), List.of())))
+                        indicadoresPorRegiao.getOrDefault(r.getId(), List.of()));
+                })
                 .collect(Collectors.toList());
 
         return new MapaResponseDTO(regioesDTO);
+    }
+
+    public MapaResponseDTO gerarMapa() {
+        return gerarMapa(null, null);
+    }
+
+    private Map<Integer, RegionValueProjection> leituraAtiva(String servico, String indicador) {
+        List<String> candidatos = candidatosMapa(servico, indicador);
+        for (String candidato : candidatos) {
+            Map<Integer, RegionValueProjection> valores = observationRepository
+                    .findLatestValuePerRegionByIndicatorOrCategory(candidato)
+                    .stream()
+                    .collect(Collectors.toMap(
+                            RegionValueProjection::getRegionId,
+                            projection -> projection,
+                            (first, ignored) -> first));
+            if (!valores.isEmpty()) {
+                return valores;
+            }
+        }
+        return new HashMap<>();
+    }
+
+    private List<String> candidatosMapa(String servico, String indicador) {
+        if (indicador != null && !indicador.isBlank()) {
+            return List.of(indicador.trim());
+        }
+
+        String id = servico == null ? "" : servico.trim().toLowerCase();
+        return switch (id) {
+            case "formacoes" -> List.of("formacao", "antenas_por_cluster", "conectividade");
+            case "empregabilidade" -> List.of("emprego", "n_usuarios", "mobilidade");
+            case "experiencias" -> List.of("estrutura_social", "n_usuarios", "mobilidade");
+            case "mentorias" -> List.of("mentoria", "n_usuarios", "mobilidade");
+            case "saude_mental" -> List.of("saude_mental", "congestionamento", "conectividade");
+            default -> List.of("n_usuarios", "mobilidade", "conectividade");
+        };
     }
 
     private Map<Integer, BigDecimal> mapaDeValores(List<RegionValueProjection> projecoes) {

@@ -35,6 +35,24 @@ public interface ObservationRepository extends JpaRepository<Observation, Intege
                         @Param("period") String period);
 
         /**
+         * Último valor por região para um indicador ou categoria. Usado por
+         * GET /mapa quando o frontend envia o contexto do serviço activo.
+         */
+        @Query(value = """
+                        SELECT DISTINCT ON (o.region_id)
+                               o.region_id AS regionId,
+                               o.obs_value AS obsValue,
+                               i.indicator_name AS indicatorName
+                        FROM observations o
+                        JOIN indicators i ON i.id = o.indicator_id
+                        WHERE UPPER(i.indicator_name) = UPPER(:indicatorOrCategory)
+                           OR UPPER(i.category) = UPPER(:indicatorOrCategory)
+                        ORDER BY o.region_id, o.obs_date DESC
+                        """, nativeQuery = true)
+        List<RegionValueProjection> findLatestValuePerRegionByIndicatorOrCategory(
+                        @Param("indicatorOrCategory") String indicatorOrCategory);
+
+        /**
          * Todos os pares (região, indicador) com pelo menos uma observação
          * gravada. Usado por GET /mapa para preencher o campo "indicadores"
          * de cada região.
@@ -78,6 +96,8 @@ public interface ObservationRepository extends JpaRepository<Observation, Intege
                 Integer getRegionId();
 
                 BigDecimal getObsValue();
+
+                String getIndicatorName();
         }
 
         interface RegionIndicatorProjection {

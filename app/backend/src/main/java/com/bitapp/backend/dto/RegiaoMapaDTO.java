@@ -16,6 +16,8 @@ public class RegiaoMapaDTO {
     private BigDecimal lng;
     private BigDecimal concentracao;
     private BigDecimal coberturaRede;
+    private BigDecimal valor;
+    private String indicador;
     private boolean semCobertura;
     private List<String> indicadores;
 
@@ -24,12 +26,15 @@ public class RegiaoMapaDTO {
 
     public RegiaoMapaDTO(String regiao, BigDecimal lat, BigDecimal lng,
                           BigDecimal concentracao, BigDecimal coberturaRede,
+                          BigDecimal valor, String indicador,
                           boolean semCobertura, List<String> indicadores) {
         this.regiao = regiao;
         this.lat = lat;
         this.lng = lng;
         this.concentracao = concentracao;
         this.coberturaRede = coberturaRede;
+        this.valor = valor;
+        this.indicador = indicador;
         this.semCobertura = semCobertura;
         this.indicadores = indicadores;
     }
@@ -72,6 +77,22 @@ public class RegiaoMapaDTO {
 
     public void setCoberturaRede(BigDecimal coberturaRede) {
         this.coberturaRede = coberturaRede;
+    }
+
+    public BigDecimal getValor() {
+        return valor;
+    }
+
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
+    }
+
+    public String getIndicador() {
+        return indicador;
+    }
+
+    public void setIndicador(String indicador) {
+        this.indicador = indicador;
     }
 
     public boolean isSemCobertura() {

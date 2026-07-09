@@ -3,7 +3,6 @@ package com.bitapp.backend.service;
 import com.bitapp.backend.dto.DadoItemDTO;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -20,16 +19,16 @@ public class FallbackQueryInterpreter implements QueryInterpreter {
             return "Não foram encontrados dados para os filtros indicados nesta consulta.";
         }
 
-        DadoItemDTO destaque = dados.stream()
-                .max(Comparator.comparing(DadoItemDTO::getValor))
-                .orElse(dados.get(0));
+        DadoItemDTO destaque = dados.get(0);
 
         String valorFormatado = destaque.getValor().stripTrailingZeros().toPlainString();
+        String local = destaque.getMunicipio() == null || destaque.getMunicipio().isBlank()
+            ? destaque.getRegiao()
+            : destaque.getRegiao() + " (" + destaque.getMunicipio() + ")";
 
         return String.format(
-                "A região %s apresenta o valor mais relevante para esta consulta (%s), "
-                        + "com base em dados de %s. É uma referência a considerar como prioridade "
-                        + "de avaliação.",
-                destaque.getRegiao(), valorFormatado, destaque.getFonte());
+            "A região %s aparece como prioridade nesta consulta (%s), com base em dados de %s. "
+                + "É uma referência inicial para avaliação territorial e decisão pública.",
+            local, valorFormatado, destaque.getFonte());
     }
 }

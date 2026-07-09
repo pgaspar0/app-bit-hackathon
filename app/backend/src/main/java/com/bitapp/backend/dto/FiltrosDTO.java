@@ -8,6 +8,7 @@ public class FiltrosDTO {
 
     private String regiao;
     private String indicador;
+    private String servico;
 
     public FiltrosDTO() {
     }
@@ -15,6 +16,12 @@ public class FiltrosDTO {
     public FiltrosDTO(String regiao, String indicador) {
         this.regiao = regiao;
         this.indicador = indicador;
+    }
+
+    public FiltrosDTO(String regiao, String indicador, String servico) {
+        this.regiao = regiao;
+        this.indicador = indicador;
+        this.servico = servico;
     }
 
     public String getRegiao() {
@@ -31,5 +38,13 @@ public class FiltrosDTO {
 
     public void setIndicador(String indicador) {
         this.indicador = indicador;
+    }
+
+    public String getServico() {
+        return servico;
+    }
+
+    public void setServico(String servico) {
+        this.servico = servico;
     }
 }

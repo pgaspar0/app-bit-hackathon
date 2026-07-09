@@ -1,355 +1,175 @@
 # Data Contract — BiT App / Equipa 48
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data Architect:** Paulo  
-**Destinatários:** Victor (Backend), Hércules (IA)  
-**Última actualização:** Junho 2026
+**Destinatários:** Victor (Backend), Hércules (IA), Paufer (Frontend)  
+**Última actualização:** Julho 2026
 
 ---
 
-## 1. O que este documento é
+## 1. Objectivo
 
-Define o que existe na base de dados, como consultá-la, e o que cada
-endpoint pode esperar receber. É a fonte de verdade entre o trabalho
-de dados e o trabalho de backend e IA.
+Este documento define:
 
-Se algo mudar na BD — nova tabela, novo indicador, nova fonte —
-este documento é actualizado antes de qualquer outra coisa.
+* os contratos de request/response actualmente implementados na API;
+* os campos obrigatórios e opcionais por endpoint;
+* as regras de interpretação por serviço no backend;
+* limitações actuais e pontos de evolução.
 
----
-
-## 2. Visão geral da base de dados
-
-A BD contém dados da **Região Metropolitana de Florianópolis, Brasil**,
-provenientes do dataset Vísent CDRView (dados sintéticos com coordenadas
-reais de antenas Anatel).
-
-### Tabelas e o que contêm
-
-| Tabela                   | O que contém                                      | Linhas aprox. |
-|--------------------------|---------------------------------------------------|---------------|
-| `sources`                | Fontes de dados registadas                        | 2             |
-| `regions`                | 27 clusters geográficos da RM Florianópolis       | 27            |
-| `indicators`             | Catálogo de métricas disponíveis                  | 4             |
-| `coverage_points`        | 132 antenas ERB reais (Claro / Anatel)            | 132           |
-| `observations`           | Indicadores por cluster, data e período           | variável      |
-| `subscriber_demographics`| Perfil demográfico agregado por cluster           | ~1.600        |
-| `od_flows`               | Fluxos origem-destino k-anonimizados (K=3)        | 506           |
-| `programs`               | Programas públicos — **vazio no MVP**             | 0             |
-| `query_logs`             | Registo de consultas à IA                         | variável      |
+É a referência oficial entre dados, backend, IA e frontend.
 
 ---
 
-## 3. Tabelas em detalhe
+## 2. Contexto da base de dados
 
-### 3.1 `regions`
+A base actual usa dados da Região Metropolitana de Florianópolis, com foco em conectividade e mobilidade (Vísent CDRView), e estrutura preparada para expandir para outras fontes.
 
-Unidade geográfica base. Tudo se liga a esta tabela.
+### Tabelas principais
 
-| Coluna         | Tipo          | Notas                                          |
-|----------------|---------------|------------------------------------------------|
-| `id`           | INTEGER       | Chave primária                                 |
-| `cluster_code` | TEXT          | Identificador único. Ex: `CBD_BEIRAMAR`, `UFSC`|
-| `municipio`    | TEXT          | Normalizado, sem acentos. Ex: `FLORIANOPOLIS`  |
-| `country`      | TEXT          | `Brasil` no MVP                                |
-| `lat`          | NUMERIC(10,6) | Centróide do cluster. **NULL se sem cobertura**|
-| `lng`          | NUMERIC(10,6) | Centróide do cluster. **NULL se sem cobertura**|
-| `metadata`     | JSONB         | Dados extras — vazio no MVP                    |
-
-**Atenção:** 4 clusters têm `lat` e `lng` **NULL** — são regiões sem
-cobertura de rede. Esta ausência é um dado de produto, não um erro.
-Representa exactamente onde falta infraestrutura antes de chegarem
-programas sociais.
+| Tabela | Uso principal |
+|---|---|
+| `regions` | Unidade geográfica base |
+| `indicators` | Catálogo de indicadores e categorias |
+| `observations` | Valores por região, indicador, data e período |
+| `sources` | Proveniência dos dados |
+| `coverage_points` | Infraestrutura de cobertura de rede |
+| `query_logs` | Histórico de consultas ao endpoint `/dados` |
 
 ---
 
-### 3.2 `indicators`
+## 3. Contratos da API
 
-Catálogo fixo de métricas disponíveis.
+### 3.1 POST /dados
 
-| `indicator_name`      | `category`      | `unit`      | Descrição                                     |
-|-----------------------|-----------------|-------------|-----------------------------------------------|
-| `n_usuarios`          | `mobilidade`    | pessoas     | Utilizadores únicos por cluster e período     |
-| `congestionamento`    | `conectividade` | score 0-1   | Nível médio de congestionamento das antenas   |
-| `download_bytes_gb`   | `conectividade` | GB          | Volume de dados descarregados no cluster      |
-| `antenas_por_cluster` | `conectividade` | unidades    | Número de antenas ERB activas no cluster      |
+Endpoint principal do produto. Recebe consulta, filtros opcionais e idioma, e devolve resposta estruturada para decisão pública.
 
-Categorias disponíveis (para filtros):
-`conectividade`, `mobilidade`, `emprego`, `formacao`,
-`mentoria`, `saude_mental`, `estrutura_social`
+#### Request
 
-Os últimos 4 estão reservados para fontes externas futuras (DATASUS, OMS).
-No MVP, só `conectividade` e `mobilidade` têm dados.
-
----
-
-### 3.3 `observations`
-
-Tabela central do sistema. Uma linha por (região, indicador, data, período).
-
-| Coluna         | Tipo          | Valores possíveis                               |
-|----------------|---------------|-------------------------------------------------|
-| `region_id`    | INTEGER       | FK → regions.id                                 |
-| `indicator_id` | INTEGER       | FK → indicators.id                              |
-| `source_id`    | INTEGER       | FK → sources.id                                 |
-| `obs_date`     | DATE          | Datas do dataset (Março 2026, 15 dias)          |
-| `period`       | TEXT          | `MADRUGADA`, `MANHA`, `TARDE`, `NOITE`, `ALL`  |
-| `obs_value`    | NUMERIC(15,4) | Valor do indicador                              |
-| `unit`         | TEXT          | Herdado do indicador                            |
-
-**`period = 'ALL'`** → agregado sem período definido (ex: `antenas_por_cluster`).
-
----
-
-### 3.4 `subscriber_demographics`
-
-Perfil demográfico da população por cluster. Dados **agregados** — não há
-registos individuais.
-
-| Coluna            | Tipo    | Valores possíveis              |
-|-------------------|---------|--------------------------------|
-| `region_id`       | INTEGER | FK → regions.id                |
-| `income_cluster`  | TEXT    | `A`, `B`, `C`, `D`            |
-| `age_group`       | TEXT    | `18-24`, `25-34`, `35-44`, `45-54`, `55+` |
-| `mobility_pattern`| TEXT    | `BAIXA`, `MODERADA`, `INTENSA` |
-| `subscriber_count`| INTEGER | Total de assinantes nesta combinação |
-| `flagship_count`  | INTEGER | Assinantes com perfil de uso intenso |
-
----
-
-### 3.5 `od_flows`
-
-Pares de deslocamento entre clusters, k-anonimizados (K=3).
-Seguros para uso público sem restrições adicionais de privacidade.
-
-| Coluna                | Tipo          | Notas                              |
-|-----------------------|---------------|------------------------------------|
-| `region_origem_id`    | INTEGER       | FK → regions.id                    |
-| `region_destino_id`   | INTEGER       | FK → regions.id                    |
-| `mesmo_cluster`       | BOOLEAN       | TRUE se origem = destino           |
-| `n_usuarios`          | INTEGER       | Utilizadores neste par OD          |
-| `n_viagens`           | INTEGER       | Total de viagens registadas        |
-| `dist_media_km`       | NUMERIC(8,3)  | Distância média do percurso        |
-| `periodo_predominante`| TEXT          | Período com mais movimento         |
-
----
-
-## 4. Queries de referência
-
-### 4.1 Regiões para o mapa (`GET /mapa`)
-
-Devolve todas as regiões com os valores mais recentes de concentração
-e cobertura — base para o mapa interactivo.
-
-```sql
-SELECT
-    r.id,
-    r.cluster_code                  AS regiao,
-    r.municipio,
-    r.lat,
-    r.lng,
-    r.lat IS NULL                   AS sem_cobertura,
-
-    -- Concentração de pessoas (último dia disponível, período TARDE)
-    conc.obs_value                  AS concentracao_pessoas,
-    conc.obs_date                   AS data_referencia,
-
-    -- Nível de congestionamento da rede
-    cong.obs_value                  AS congestionamento_rede,
-
-    -- Número de antenas no cluster
-    ant.obs_value                   AS n_antenas
-
-FROM regions r
-
--- Concentração: período TARDE, última data disponível
-LEFT JOIN LATERAL (
-    SELECT o.obs_value, o.obs_date
-    FROM observations o
-    JOIN indicators i ON i.id = o.indicator_id
-    WHERE o.region_id = r.id
-      AND i.indicator_name = 'n_usuarios'
-      AND o.period = 'TARDE'
-    ORDER BY o.obs_date DESC
-    LIMIT 1
-) conc ON TRUE
-
--- Congestionamento: período TARDE, última data disponível
-LEFT JOIN LATERAL (
-    SELECT o.obs_value
-    FROM observations o
-    JOIN indicators i ON i.id = o.indicator_id
-    WHERE o.region_id = r.id
-      AND i.indicator_name = 'congestionamento'
-      AND o.period = 'TARDE'
-    ORDER BY o.obs_date DESC
-    LIMIT 1
-) cong ON TRUE
-
--- Antenas: indicador estático
-LEFT JOIN LATERAL (
-    SELECT o.obs_value
-    FROM observations o
-    JOIN indicators i ON i.id = o.indicator_id
-    WHERE o.region_id = r.id
-      AND i.indicator_name = 'antenas_por_cluster'
-    LIMIT 1
-) ant ON TRUE
-
-ORDER BY r.cluster_code;
+```json
+{
+  "consulta": "Onde devo priorizar formações?",
+  "filtros": {
+    "regiao": "FLORIANOPOLIS",
+    "indicador": "conectividade",
+    "servico": "formacoes"
+  },
+  "idioma": "pt"
+}
 ```
 
----
+#### Campos de request
 
-### 4.2 Regiões com alta concentração e baixa cobertura
+| Campo | Tipo | Obrigatório | Notas |
+|---|---|---|---|
+| `consulta` | string | sim | Texto livre da pergunta |
+| `filtros.regiao` | string | não | `cluster_code` ou `municipio` |
+| `filtros.indicador` | string | não | `indicator_name` ou `category` |
+| `filtros.servico` | string | não | `formacoes`, `empregabilidade`, `experiencias`, `mentorias`, `saude_mental` |
+| `idioma` | string | não | default interno: `pt` |
 
-A pergunta principal do produto: onde estão as pessoas mas falta rede?
+#### Response
 
-```sql
-SELECT
-    r.cluster_code,
-    r.municipio,
-    conc.obs_value   AS pessoas_tarde,
-    ant.obs_value    AS n_antenas,
-    cong.obs_value   AS congestionamento
-
-FROM regions r
-
-LEFT JOIN LATERAL (
-    SELECT o.obs_value FROM observations o
-    JOIN indicators i ON i.id = o.indicator_id
-    WHERE o.region_id = r.id AND i.indicator_name = 'n_usuarios'
-      AND o.period = 'TARDE'
-    ORDER BY o.obs_date DESC LIMIT 1
-) conc ON TRUE
-
-LEFT JOIN LATERAL (
-    SELECT o.obs_value FROM observations o
-    JOIN indicators i ON i.id = o.indicator_id
-    WHERE o.region_id = r.id AND i.indicator_name = 'antenas_por_cluster'
-    LIMIT 1
-) ant ON TRUE
-
-LEFT JOIN LATERAL (
-    SELECT o.obs_value FROM observations o
-    JOIN indicators i ON i.id = o.indicator_id
-    WHERE o.region_id = r.id AND i.indicator_name = 'congestionamento'
-      AND o.period = 'TARDE'
-    ORDER BY o.obs_date DESC LIMIT 1
-) cong ON TRUE
-
-WHERE conc.obs_value > 500       -- alta concentração de pessoas
-  AND (ant.obs_value < 3         -- pouca cobertura de antenas
-       OR ant.obs_value IS NULL) -- ou sem cobertura
-
-ORDER BY conc.obs_value DESC;
+```json
+{
+  "resposta_ia": "A região X aparece como prioridade...",
+  "resumo_executivo": "A consulta devolveu 18 registos em 6 regiões...",
+  "prioridade_intervencao": "ALTA",
+  "recomendacao": "Prioridade alta em Formações...",
+  "estatisticas": {
+    "total_registros": 18,
+    "total_regioes": 6,
+    "valor_medio": 46.2,
+    "valor_minimo": 18,
+    "valor_maximo": 82,
+    "regiao_destaque": "CBD_BEIRAMAR"
+  },
+  "top_regioes": [
+    {
+      "regiao": "CBD_BEIRAMAR",
+      "municipio": "FLORIANOPOLIS",
+      "indicador": "n_usuarios",
+      "valor": 82,
+      "fonte": "Vísent CDRView",
+      "data_referencia": "2026-03-14",
+      "unidade": "pessoas",
+      "lat": -27.593,
+      "lng": -48.548,
+      "sem_cobertura": false
+    }
+  ],
+  "dados": [
+    {
+      "regiao": "CBD_BEIRAMAR",
+      "municipio": "FLORIANOPOLIS",
+      "indicador": "n_usuarios",
+      "valor": 82,
+      "fonte": "Vísent CDRView",
+      "data_referencia": "2026-03-14",
+      "unidade": "pessoas",
+      "lat": -27.593,
+      "lng": -48.548,
+      "sem_cobertura": false
+    }
+  ],
+  "fontes": ["Vísent CDRView"]
+}
 ```
 
+#### Notas de contrato
+
+* O backend usa `SNAKE_CASE` global no JSON.
+* `top_regioes` pode ser derivado de `dados` quando necessário.
+* `resposta_ia` é resiliente: usa IA externa quando disponível e fallback local quando não estiver.
+
 ---
 
-### 4.3 Perfil demográfico de uma região (`POST /dados`)
+### 3.2 GET /mapa
 
-```sql
-SELECT
-    r.cluster_code,
-    r.municipio,
-    sd.income_cluster,
-    sd.age_group,
-    sd.mobility_pattern,
-    sd.subscriber_count,
-    ROUND(100.0 * sd.subscriber_count /
-          SUM(sd.subscriber_count) OVER (PARTITION BY r.id), 2) AS pct_cluster
+Devolve leitura territorial para mapa interactivo.
 
-FROM subscriber_demographics sd
-JOIN regions r ON r.id = sd.region_id
+#### Query params opcionais
 
-WHERE r.cluster_code = 'CBD_BEIRAMAR'   -- substituir pelo filtro do request
+| Param | Tipo | Notas |
+|---|---|---|
+| `servico` | string | Contexto temático do mapa |
+| `indicador` | string | Força indicador/categoria específica |
 
-ORDER BY sd.subscriber_count DESC;
+#### Exemplo
+
+`GET /mapa?servico=formacoes`
+
+#### Response
+
+```json
+{
+  "regioes": [
+    {
+      "regiao": "CBD_BEIRAMAR",
+      "lat": -27.593,
+      "lng": -48.548,
+      "concentracao": 1240,
+      "cobertura_rede": 8,
+      "valor": 8,
+      "indicador": "antenas_por_cluster",
+      "sem_cobertura": false,
+      "indicadores": ["n_usuarios", "congestionamento", "antenas_por_cluster"]
+    }
+  ]
+}
 ```
 
----
+#### Semântica dos campos
 
-### 4.4 Fluxos de saída de uma região
-
-Quem sai e para onde vai?
-
-```sql
-SELECT
-    r_dest.cluster_code     AS destino,
-    r_dest.municipio        AS municipio_destino,
-    f.n_usuarios,
-    f.n_viagens,
-    f.dist_media_km,
-    f.periodo_predominante
-
-FROM od_flows f
-JOIN regions r_orig ON r_orig.id = f.region_origem_id
-JOIN regions r_dest ON r_dest.id = f.region_destino_id
-
-WHERE r_orig.cluster_code = 'CBD_BEIRAMAR'  -- substituir pelo filtro
-  AND f.mesmo_cluster = FALSE
-
-ORDER BY f.n_usuarios DESC;
-```
+* `concentracao`: último valor de `n_usuarios` no período TARDE.
+* `cobertura_rede`: valor de `antenas_por_cluster` (ALL).
+* `valor` + `indicador`: leitura activa segundo `servico`/`indicador`.
+* `sem_cobertura`: `lat` ou `lng` ausente.
 
 ---
 
-### 4.5 Evolução de um indicador ao longo do tempo
+### 3.3 GET /regioes
 
-```sql
-SELECT
-    o.obs_date,
-    o.period,
-    o.obs_value,
-    i.unit
-
-FROM observations o
-JOIN indicators   i ON i.id = o.indicator_id
-JOIN regions      r ON r.id = o.region_id
-
-WHERE r.cluster_code    = 'UFSC'           -- substituir pelo filtro
-  AND i.indicator_name  = 'n_usuarios'     -- substituir pelo indicador
-  AND o.period          != 'ALL'
-
-ORDER BY o.obs_date, o.period;
-```
-
----
-
-### 4.6 Listar indicadores disponíveis (`GET /indicadores`)
-
-```sql
-SELECT
-    indicator_name,
-    category,
-    unit,
-    description
-FROM indicators
-ORDER BY category, indicator_name;
-```
-
----
-
-### 4.7 Listar regiões disponíveis (`GET /regioes`)
-
-```sql
-SELECT
-    id,
-    cluster_code,
-    municipio,
-    lat,
-    lng,
-    lat IS NULL AS sem_cobertura
-FROM regions
-ORDER BY municipio, cluster_code;
-```
-
----
-
-## 5. O que o backend recebe por endpoint
-
-### `GET /regioes`
+Lista todas as regiões com metadados cartográficos mínimos.
 
 ```json
 [
@@ -360,19 +180,15 @@ ORDER BY municipio, cluster_code;
     "lat": -27.593,
     "lng": -48.548,
     "sem_cobertura": false
-  },
-  {
-    "id": 5,
-    "cluster_code": "ANTONIO_CARLOS",
-    "municipio": "ANTONIO CARLOS",
-    "lat": null,
-    "lng": null,
-    "sem_cobertura": true
   }
 ]
 ```
 
-### `GET /indicadores`
+---
+
+### 3.4 GET /indicadores
+
+Lista catálogo de indicadores.
 
 ```json
 [
@@ -385,100 +201,69 @@ ORDER BY municipio, cluster_code;
 ]
 ```
 
-### `GET /mapa`
+---
 
-Formato esperado para o frontend (conforme arquitectura):
+### 3.5 POST /ingestao/reprocessar
 
-```json
-{
-  "regioes": [
-    {
-      "regiao": "CBD_BEIRAMAR",
-      "lat": -27.593,
-      "lng": -48.548,
-      "concentracao": 1240,
-      "cobertura_rede": 8,
-      "sem_cobertura": false,
-      "indicadores": ["n_usuarios", "congestionamento", "antenas_por_cluster"]
-    }
-  ]
-}
-```
-
-### `POST /dados`
-
-O backend recebe o request, consulta a BD, e devolve ao frontend.
-A IA (Hércules) interpreta o resultado e gera o campo `resposta_ia`.
-
-Request:
-```json
-{
-  "consulta": "Onde faltam antenas mas há muita gente?",
-  "filtros": { "regiao": "FLORIANOPOLIS", "indicador": "conectividade" },
-  "idioma": "pt"
-}
-```
-
-O que a BD entrega ao backend para este tipo de consulta:
-
-```json
-[
-  {
-    "cluster_code": "PALHOCA_PRAIA",
-    "municipio": "PALHOCA",
-    "pessoas_tarde": 890,
-    "n_antenas": 1,
-    "congestionamento": 0.87
-  }
-]
-```
+Aciona execução do script Python de ingestão. Endpoint de apoio operacional.
 
 ---
 
-## 6. Limitações conhecidas
+## 4. Regras de contexto por serviço
 
-| Limitação | Impacto | Mitigação futura |
-|-----------|---------|------------------|
-| Dataset cobre apenas Florianópolis | Não representa Angola nem outras regiões | Adicionar base regional África + LATAM |
-| Dados sintéticos (não reais) | Padrões estatisticamente realistas mas não reais | Substituir por dados reais em produção |
-| Sem dados de emprego, formação, saúde mental | Serviços 1, 2 e 5 ficam sem dados no MVP | Integrar DATASUS, OMS, bases regionais |
-| Tabela `programs` vazia | Serviços 3 e 4 sem dados no MVP | Alimentar manualmente ou via API pública |
-| Período do dataset: Março 2026, 15 dias | Sem análise sazonal nem anual | Expandir com mais dados no futuro |
-| 4 clusters sem antenas (sem lat/lng) | Mapa não posiciona estas regiões | Geocodificar manualmente os centróides |
+No backend, `filtros.servico` altera o conjunto prioritário de indicadores/categorias para consulta e ranking.
 
----
+| Serviço | Contexto de leitura preferencial |
+|---|---|
+| `formacoes` | `formacao`, `antenas_por_cluster`, `conectividade` |
+| `empregabilidade` | `emprego`, `n_usuarios`, `mobilidade` |
+| `experiencias` | `estrutura_social`, `n_usuarios`, `mobilidade` |
+| `mentorias` | `mentoria`, `n_usuarios`, `mobilidade` |
+| `saude_mental` | `saude_mental`, `congestionamento`, `conectividade` |
 
-## 7. Notas técnicas importantes
-
-**`ecgi` é sempre string** — nunca numérico. O pandas converte para float
-por defeito e corrompe o identificador. O pipeline já trata isto.
-
-**Municípios normalizados sem acentos** — `FLORIANOPOLIS`, `SAO JOSE`,
-`PALHOCA`, `BIGUACU`. Filtros devem usar a mesma normalização.
-
-**Cluster codes em maiúsculas com underscore** — ex: `CBD_BEIRAMAR`,
-`UFSC`, `SAO_JOSE_KOBRASOL`. Nunca minúsculas.
-
-**Period `ALL`** — usado apenas para indicadores sem variação por período
-(ex: `antenas_por_cluster`). Não é um período do dia.
-
-**Regiões sem cobertura têm `lat = NULL`** — o frontend deve tratar
-este caso. São exactamente as regiões mais importantes para o produto.
+Quando `filtros.indicador` for explicitamente enviado, ele tem prioridade sobre a regra do serviço.
 
 ---
 
-## 8. Como adicionar uma nova fonte de dados
+## 5. Notas de modelagem e qualidade de dados
 
-1. Inserir a fonte em `sources`
-2. Inserir o novo indicador em `indicators`
-3. Mapear as regiões da nova fonte para `cluster_code` em `regions`
-4. Inserir observações em `observations` com o novo `indicator_id`
-5. Actualizar este documento
-
-Nenhuma tabela existente precisa de ser alterada.
+1. `lat`/`lng` podem ser `NULL` e isso representa ausência real de cobertura.
+2. `period = ALL` é reservado para indicadores sem variação por período.
+3. `cluster_code` e `municipio` são as chaves práticas de filtragem no backend.
+4. Categorias sociais podem ainda operar por proxy no MVP quando não houver fonte dedicada.
 
 ---
 
-*Dúvidas sobre os dados: fala com o Paulo.*  
-*Dúvidas sobre os endpoints: fala com o Victor.*  
-*Dúvidas sobre os prompts da IA: fala com o Hércules.*
+## 6. Limitações actuais
+
+| Limitação | Impacto | Mitigação |
+|---|---|---|
+| Base principal centrada em Florianópolis | baixa representatividade geográfica global | expandir fontes e regiões |
+| Cobertura social incompleta em algumas categorias | parte dos serviços usa proxies | incorporar bases específicas (emprego, saúde, formação) |
+| Testes automatizados de negócio ainda limitados | risco de regressão em evolução rápida | ampliar suite de integração por endpoint |
+
+---
+
+## 7. Guia de evolução do contrato
+
+Sempre que houver mudança em payload de API:
+
+1. actualizar DTO backend;
+2. actualizar consumo do frontend;
+3. actualizar este documento no mesmo ciclo;
+4. validar build frontend e testes backend.
+
+---
+
+## 8. Próximos passos recomendados
+
+1. consolidar testes de integração de `/dados` e `/mapa`;
+2. enriquecer fontes para serviços sociais;
+3. manter `filtros.servico` como eixo de leitura temática no frontend e backend;
+4. evoluir explicabilidade da recomendação com critérios mais auditáveis.
+
+---
+
+*Dúvidas sobre dados: Paulo.*  
+*Dúvidas sobre backend/contrato: Victor.*  
+*Dúvidas sobre IA: Hércules.*
