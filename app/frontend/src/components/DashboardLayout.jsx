@@ -1,54 +1,56 @@
-import { SERVICES } from '../config/product.js';
+import { SERVICES, PRIORITY_STATES } from '../config/product.js';
 import { formatValue } from '../utils/data.js';
 import EvidencePanel from './EvidencePanel.jsx';
 import MapaInterativo from './MapaInterativo.jsx';
 import SidebarConsulta from './SidebarConsulta.jsx';
 
-function Header({ service, result, status, idioma, setIdioma, catalogStatus }) {
-  const stats = result?.estatisticas;
+function ServiceIcon({ path, size = 18 }) {
+  return (
+    <svg className="shrink-0" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+    </svg>
+  );
+}
+
+function Header({ service, idioma, setIdioma, catalogStatus }) {
   const idiomas = ['pt', 'en', 'es'];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/90 text-white backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-md border border-white/15 bg-white text-lg font-black text-slate-950">
-              BiT
-            </div>
-            <div>
-              <p className="text-sm font-semibold tracking-wide text-white">Decisão pública baseada em dados</p>
-              <p className="text-xs text-slate-400">Pergunta - evidência - território - recomendação</p>
-            </div>
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-navy-950/90 text-white backdrop-blur-xl">
+      <div className="mx-auto flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-400 to-cyan-500 text-sm font-black text-navy-950 shadow-lg shadow-teal-500/20">
+            BiT
+          </div>
+          <div className="hidden sm:block">
+            <p className="text-sm font-bold tracking-wide text-white">BiT App</p>
+            <p className="text-[11px] text-slate-500">Decisão pública · Inteligência territorial</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[11px] sm:flex">
+            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-medium text-slate-400">
+              {catalogStatus === 'success' ? 'API conectada' : 'Modo demonstração'}
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-xs sm:flex sm:items-center">
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-emerald-100">
-              {status === 'success' ? 'Dataset consultado' : 'Dataset pronto'}
-            </span>
-            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-slate-200">
-              Catálogo: {catalogStatus === 'success' ? 'API' : 'fallback'}
-            </span>
-            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-slate-200">
-              {stats?.total_regioes ?? 0} regiões no contexto
-            </span>
-            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-slate-200">
-              Serviço: {service.label}
-            </span>
-            <span className="flex rounded-full border border-white/15 bg-white/5 p-0.5">
-              {idiomas.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setIdioma(item)}
-                  className={`rounded-full px-2.5 py-1 font-bold uppercase transition ${
-                    idioma === item ? 'bg-white text-slate-950' : 'text-slate-300 hover:text-white'
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </span>
+          <div className="flex rounded-full border border-white/[0.08] bg-white/[0.04] p-0.5">
+            {idiomas.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setIdioma(item)}
+                className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase transition ${
+                  idioma === item
+                    ? 'bg-white text-navy-950 shadow-sm'
+                    : 'text-slate-500 hover:text-white'
+                }`}
+              >
+                {item}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -56,90 +58,108 @@ function Header({ service, result, status, idioma, setIdioma, catalogStatus }) {
   );
 }
 
-function ServiceNav({ active, onChange }) {
+function ServiceNav({ active, onChange, services }) {
   return (
-    <nav className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
-      <div className="flex gap-2 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-        {SERVICES.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onChange(item.id)}
-            className={`min-h-11 shrink-0 rounded-md px-4 text-left text-sm font-semibold transition ${
-              active === item.id ? 'text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-            }`}
-            style={active === item.id ? { backgroundColor: item.accent } : undefined}
-          >
-            {item.label}
-          </button>
-        ))}
+    <nav className="border-b border-white/[0.06] bg-navy-950/60 backdrop-blur-md">
+      <div className="mx-auto max-w-[1440px] px-3 sm:px-5">
+        <div className="flex gap-1 overflow-x-auto py-2 scrollbar-none">
+          {services.map((item) => {
+            const isActive = active === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onChange(item.id)}
+                className={`group flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-all sm:px-4 ${
+                  isActive
+                    ? 'text-white shadow-lg'
+                    : 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-300'
+                }`}
+                style={isActive ? { backgroundColor: item.accent, color: '#fff' } : undefined}
+              >
+                <ServiceIcon path={item.icon} size={16} />
+                <span className="hidden sm:inline">{item.label}</span>
+                <span className="sm:hidden">{item.short}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
 }
 
-function Hero({ service }) {
-  return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8">
-      <div className="rounded-lg bg-white p-6 shadow-panel ring-1 ring-slate-200 sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Sistema de apoio à decisão</p>
-        <h1 className="mt-3 max-w-3xl text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
-          Transformar perguntas públicas em decisões territoriais claras.
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-          O BiT liga linguagem natural, evidência estatística e leitura geográfica para apoiar políticas públicas
-          com rastreabilidade e foco na ação.
-        </p>
-        <div className="mt-6 grid gap-2 text-sm font-semibold text-slate-700 sm:grid-cols-4">
-          {['Pergunta', 'Evidência', 'Território', 'Decisão'].map((step, index) => (
-            <div key={step} className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-              <span className="flex size-6 items-center justify-center rounded bg-slate-950 text-xs text-white">
-                {index + 1}
-              </span>
-              {step}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <aside className="rounded-lg border border-slate-800 bg-slate-900 p-6 text-white shadow-panel">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Contexto atual</p>
-        <h2 className="mt-3 text-2xl font-black">{service.label}</h2>
-        <p className="mt-3 text-sm leading-6 text-slate-300">
-          A camada de análise está preparada para novas regiões, fontes, indicadores e observações sem depender de
-          uma geografia fixa.
-        </p>
-        <div className="mt-5 rounded-md border border-white/10 bg-white/5 p-4">
-          <p className="text-xs text-slate-400">Indicador-guia</p>
-          <p className="mt-1 text-lg font-bold">{service.indicator}</p>
-        </div>
-      </aside>
-    </section>
-  );
-}
-
-function MetricsStrip({ result }) {
+function KPIStrip({ result, service }) {
   const stats = result?.estatisticas || {};
+  const priority = PRIORITY_STATES[result?.prioridade_intervencao || 'SEM_DADOS'] || PRIORITY_STATES.SEM_DADOS;
+
   const cards = [
-    ['Registos', stats.total_registros],
-    ['Regiões', stats.total_regioes],
-    ['Valor médio', formatValue(stats.valor_medio)],
-    ['Mínimo', formatValue(stats.valor_minimo)],
-    ['Máximo', formatValue(stats.valor_maximo)],
-    ['Região destaque', stats.regiao_destaque || 'Sem destaque'],
+    {
+      label: 'Regiões analisadas',
+      value: stats.total_regioes ?? 0,
+      icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z',
+      color: '#38bdf8',
+    },
+    {
+      label: 'Valor médio',
+      value: formatValue(stats.valor_medio),
+      icon: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z',
+      color: service.accent,
+    },
+    {
+      label: 'Região destaque',
+      value: stats.regiao_destaque || '—',
+      icon: 'M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z',
+      color: '#fbbf24',
+      truncate: true,
+    },
+    {
+      label: 'Intervenção',
+      value: priority.label.replace('Prioridade ', ''),
+      icon: 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z',
+      color: priority.color,
+    },
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-5 sm:px-6 lg:px-8">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        {cards.map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
-            <p className="mt-2 truncate text-2xl font-black text-slate-950">{value}</p>
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          className="group rounded-xl border border-white/[0.06] bg-navy-900/80 p-3 transition hover:border-white/[0.12] sm:p-4"
+        >
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-md" style={{ backgroundColor: `${card.color}18` }}>
+              <svg className="size-3.5" fill="none" stroke={card.color} strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d={card.icon} />
+              </svg>
+            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{card.label}</p>
           </div>
-        ))}
+          <p className={`mt-2 text-xl font-black text-white sm:text-2xl ${card.truncate ? 'truncate' : ''}`}>
+            {card.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ServiceContext({ service }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-navy-900/80 p-3 sm:p-4">
+      <div className="flex size-10 items-center justify-center rounded-lg" style={{ backgroundColor: service.accentBg }}>
+        <ServiceIcon path={service.icon} size={20} />
       </div>
-    </section>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-white">{service.label}</p>
+        <p className="truncate text-xs text-slate-500">{service.description}</p>
+      </div>
+      <div className="hidden rounded-md border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 sm:block">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Indicador-guia</p>
+        <p className="mt-0.5 text-xs font-bold text-slate-300">{service.indicator}</p>
+      </div>
+    </div>
   );
 }
 
@@ -159,30 +179,17 @@ export default function DashboardLayout(props) {
   } = props;
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="flex min-h-screen flex-col bg-navy-950">
       <Header
         service={service}
-        result={result}
-        status={status}
         idioma={idioma}
         setIdioma={setIdioma}
         catalogStatus={catalogStatus}
       />
-      <ServiceNav active={serviceId} onChange={setServiceId} />
-      <Hero service={service} />
-      <MetricsStrip result={result} />
+      <ServiceNav active={serviceId} onChange={setServiceId} services={SERVICES} />
 
-      <main className="mx-auto grid max-w-7xl gap-5 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.92fr)] lg:px-8">
-        <div className="space-y-5">
-          <SidebarConsulta {...props} />
-          <EvidencePanel
-            result={result}
-            service={service}
-            selectedRegion={selectedRegion}
-            setSelectedRegion={setSelectedRegion}
-          />
-        </div>
-
+      {/* Map hero — protagonista */}
+      <section className="mx-auto w-full max-w-[1440px] px-3 pt-3 sm:px-5 sm:pt-4">
         <MapaInterativo
           result={result}
           service={service}
@@ -190,7 +197,38 @@ export default function DashboardLayout(props) {
           setSelectedRegion={setSelectedRegion}
           mapRegions={mapRegions}
         />
+      </section>
+
+      {/* KPIs + Service Context */}
+      <section className="mx-auto w-full max-w-[1440px] px-3 py-3 sm:px-5 sm:py-4">
+        <div className="space-y-3">
+          <ServiceContext service={service} />
+          <KPIStrip result={result} service={service} />
+        </div>
+      </section>
+
+      {/* Consulta IA + Evidence side by side */}
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-3 pb-6 sm:px-5 sm:pb-8">
+        <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr] sm:gap-4">
+          <div className="space-y-3 sm:space-y-4">
+            <SidebarConsulta {...props} />
+          </div>
+          <EvidencePanel
+            result={result}
+            service={service}
+            selectedRegion={selectedRegion}
+            setSelectedRegion={setSelectedRegion}
+          />
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/[0.04] bg-navy-950 py-4">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 text-[11px] text-slate-600 sm:px-5">
+          <span>BiT App · Equipa 48 · No Country · S06-26</span>
+          <span>Dataset Vísent CDRView · Região Metropolitana de Florianópolis</span>
+        </div>
+      </footer>
     </div>
   );
 }
