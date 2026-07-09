@@ -1,8 +1,8 @@
 # ANTES DE EXECUTAR, CRIA O BANCO (DOCKER-COMPOSE) E INGESTA OS DADOS(ingest.py)!! 
 
 ## Caso não reconhecer as chaves da API, execute isso no terminal (nesta pasta) antes de executar:
-    $env:GEMINI_API_KEY="AIzaSyBtG-5HEAtFPjieIucpN8Bd1r1Q0YCHigw"
-    $env:GOOGLE_CLOUD_PROJECT="gen-lang-client-0212917508"
+    $env:GEMINI_API_KEY="chavedeapi"
+    $env:GOOGLE_CLOUD_PROJECT="chavedeapi"
 
 ## Outros modelos para usar:
     google_gemini/gemini-2.5-flash

@@ -15,6 +15,7 @@ com/bitapp/backend/dto/RegiaoMapaDTO.class
 com/bitapp/backend/entity/CoveragePoint.class
 com/bitapp/backend/entity/Program.class
 com/bitapp/backend/dto/MapaResponseDTO.class
+com/bitapp/backend/dto/DadosEstatisticasDTO.class
 com/bitapp/backend/entity/Region.class
 com/bitapp/backend/dto/ErrorResponseDTO.class
 com/bitapp/backend/BitBackendApplication.class
@@ -33,6 +34,7 @@ com/bitapp/backend/service/AiServiceQueryInterpreter.class
 com/bitapp/backend/entity/OdFlow.class
 com/bitapp/backend/dto/FiltrosDTO.class
 com/bitapp/backend/dto/AiInterpretarRequestDTO.class
+com/bitapp/backend/service/DadosService$ServiceContext.class
 com/bitapp/backend/service/RegiaoService.class
 com/bitapp/backend/repository/CoveragePointRepository.class
 com/bitapp/backend/service/DadosService.class

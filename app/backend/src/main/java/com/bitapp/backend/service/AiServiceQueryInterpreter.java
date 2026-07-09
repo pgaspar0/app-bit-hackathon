@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Chama o serviço de IA (Hércules) via HTTP. O contrato usado aqui
- * (POST {AI_SERVICE_URL}/interpretar) é uma PROPOSTA — ver
+ * (POST {AI_SERVICE_URL}/webhook) é uma PROPOSTA — ver
  * AiInterpretarRequestDTO para a nota completa. Ajusta esta classe
  * quando o contrato real for definido; nada mais no backend depende disto.
  *
@@ -36,7 +36,7 @@ public class AiServiceQueryInterpreter implements QueryInterpreter {
         AiInterpretarRequestDTO request = new AiInterpretarRequestDTO(consulta, dados, idioma);
 
         AiInterpretarResponseDTO response = restTemplate.postForObject(
-                aiServiceUrl + "/interpretar", request, AiInterpretarResponseDTO.class);
+                aiServiceUrl + "/webhook", request, AiInterpretarResponseDTO.class);
 
         if (response == null || response.getRespostaIa() == null || response.getRespostaIa().isBlank()) {
             throw new IllegalStateException("Serviço de IA devolveu uma resposta vazia.");
